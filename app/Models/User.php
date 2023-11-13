@@ -43,8 +43,8 @@ class User extends Authenticatable
         'password' => 'hashed',
     ];
 
-    public function detail()
+    public function user_details()
     {
-        return $this->belongsTo(UserDetails::class);
+        return $this->hasOne(UserDetails::class);
     }
 }
