@@ -26,6 +26,7 @@ return new class extends Migration
             $table->integer('postal_code')->nullable();
             $table->softDeletes();
             $table->timestamps();
+            // Relationships
             $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
         });
     }
