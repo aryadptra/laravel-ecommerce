@@ -14,6 +14,7 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
+// Admin routes
 Route::prefix('admin')->group(function () {
     // Route login
     Route::post('/login', App\Http\Controllers\Api\Admin\LoginController::class, ['as' => 'admin']);
@@ -26,5 +27,18 @@ Route::prefix('admin')->group(function () {
     });
 });
 
+// Group route with middleware "auth:api"
+Route::group(['middleware' => 'auth:api'], function () {
+    //route user logged in
+    Route::get('/user', function (Request $request) {
+        return $request->user();
+    })->name('user');
+    //route logout
+    Route::post('/logout', App\Http\Controllers\Api\LogoutController::class);
+});
 Route::post('/register', App\Http\Controllers\Api\RegisterController::class);
 Route::post('/login', App\Http\Controllers\Api\LoginController::class);
+
+Route::apiResource('/categories', App\Http\Controllers\Api\Admin\CategoryController::class, [
+    'except' => ['create', 'update']
+]);

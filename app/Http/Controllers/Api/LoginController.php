@@ -20,12 +20,12 @@ class LoginController extends Controller
             'email'     => 'required|email',
             'password'  => 'required'
         ], [
-            'email.required' => 'EMAIL REQUIRED',
-            'email.email' => 'INVALID EMAIL FORMAT',
-            'password.required' => 'PASSWORD REQUIRED'
+            'email.required' => 'Email is required.',
+            'email.email' => 'Invalid email address.',
+            'password.required' => 'Password is required.'
         ]);
 
-        // If validation fail
+        // If validation fails
         if ($validator->fails()) {
             return response()->json($validator->errors(), 422);
         }
@@ -33,19 +33,18 @@ class LoginController extends Controller
         // Find user by email from request "email"
         $user = User::with('user_details')->where('email', $request->email)->first();
 
-        // If password from user and password from request not same
+        // If no user found or passwords do not match
         if (!$user || !Hash::check($request->password, $user->password)) {
-            // Return with status code "400" and login failed
             return response()->json([
                 'success' => false,
-                'message' => 'LOGIN_FAILED',
-            ], 400);
+                'message' => 'Please check your credentials.'
+            ], 422); // 401 for unauthorized access
         }
 
-        // User success login and create token
+        // User successfully logged in, create token
         return response()->json([
             'success' => true,
-            'message' => 'LOGIN_SUCCESS',
+            'message' => 'Login successfully',
             'data'    => $user,
             'token'   => $user->createToken('authToken')->accessToken
         ], 200);

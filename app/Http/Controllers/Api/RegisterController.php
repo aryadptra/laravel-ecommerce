@@ -15,6 +15,7 @@ class RegisterController extends Controller
      */
     public function __invoke(Request $request)
     {
+        // REQUEST VALIDATION
         $validator = Validator::make($request->all(), [
             'name' => 'required',
             'email' => 'required|email',
@@ -24,53 +25,61 @@ class RegisterController extends Controller
             'password' => 'required',
             're-password' => 'required|same:password'
         ], [
-            'name.required' => 'NAME REQUIRED',
-            'email.required' => 'EMAIL REQUIRED',
-            'phone_number.required' => 'PHONE NUMBER REQUIRED',
-            'address.required' => 'ADDRESS REQUIRED',
-            'email.email' => 'INVALID EMAIL FORMAT',
-            'password.required' => 'PASSWORD REQUIRED',
-            're-password.required' => 'REPASSWORD REQUIRED',
-            're-password.same' => 'REPASSWORD SHOULD MATCH PASSWORD'
+            'name.required' => 'Name is required.',
+            'email.required' => 'Email is required.',
+            'email.email' => 'Invalid email format.',
+            'phone_number.required' => 'Phone number is required.',
+            'phone_number.numeric' => 'Phone number must be numeric.',
+            'country.required' => 'Country is required.',
+            'address.required' => 'Address is required.',
+            'password.required' => 'Password is required.',
+            're-password.required' => 'Please re-type your password.',
+            're-password.same' => 'Passwords do not match.'
         ]);
 
+        // If validation fails
         if ($validator->fails()) {
             return response()->json($validator->errors(), 422);
         }
 
+        // Check if email already exists
         $exists = User::where('email', $request->email)->first();
-
         if ($exists) {
             return response()->json([
                 'status' => false,
-                'message' => 'EMAIL ALREADY EXISTS'
+                'message' => 'Email already exists.'
             ], 422);
         }
 
+        // Create user
         $user = User::create([
             'name' => $request->name,
             'email' => $request->email,
             'password' => bcrypt($request->password)
         ]);
 
-        $user_detail = UserDetails::create([
+        // Create user details
+        $userDetail = UserDetails::create([
             'user_id' => $user['id'],
             'phone_number' => $request->phone_number,
             'address' => $request->address,
+            'country' => $request->country
         ]);
 
-        if (!$user_detail) {
+        // Check if user details creation failed
+        if (!$userDetail) {
             return response()->json([
                 'status' => false,
-                'message' => 'REGISTER FAILED'
-            ], 400);
+                'message' => 'Failed to create user details.'
+            ], 500);
         }
 
+        // Fetch user with details
         $data = User::with('user_details')->where('id', $user->id)->first();
 
         return response()->json([
             'status' => true,
-            'message' => 'REGISTER SUCCESSFUL',
+            'message' => 'Registration successfully',
             'data' => $data
         ], 200);
     }
