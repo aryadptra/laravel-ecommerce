@@ -40,5 +40,5 @@ Route::post('/register', App\Http\Controllers\Api\RegisterController::class);
 Route::post('/login', App\Http\Controllers\Api\LoginController::class);
 
 Route::apiResource('/categories', App\Http\Controllers\Api\Admin\CategoryController::class, [
-    'except' => ['create', 'update']
+    'except' => ['create', 'edit']
 ]);

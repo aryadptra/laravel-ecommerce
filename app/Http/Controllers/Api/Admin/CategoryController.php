@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Resources\ResponseResource;
 use App\Models\Category;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Validator;
 
@@ -28,13 +29,38 @@ class CategoryController extends Controller
         if ($total == 0) {
             return response()->json([
                 'status' => true,
-                'message' => "DATA EMPTY"
+                'message' => "Empty data for category."
             ], 200);
         }
 
         return response()->json([
             'status' => true,
-            'message' => "GET DATA SUCCESSFULLY",
+            'message' => "Successfully get data category.",
+            'data' => $category
+        ], 200);
+    }
+
+
+    /**
+     * Display a listing of the resource.
+     *
+     * @return \Illuminate\Http\Response
+     */
+    public function show($id)
+    {
+        // Display all data for the category
+        $category = Category::where('id', $id)->first();
+
+        if (!$category) {
+            return response()->json([
+                'status' => false,
+                'message' => "Category not found.",
+            ], 404);
+        }
+
+        return response()->json([
+            'status' => true,
+            'message' => "Successfully get data category.",
             'data' => $category
         ], 200);
     }
@@ -51,9 +77,10 @@ class CategoryController extends Controller
             'name' => 'required',
             'icon'    => 'required|image|mimes:jpeg,jpg,png|max:2000',
         ], [
-            'name.required' => 'NAME REQUIRED',
-            'icon.required' => 'ICON REQUIRED',
-            'icon.image' => 'ICON MUST BE AN IMAGE'
+            'name.required' => 'Name is required.',
+            'icon.required' => 'Icon is required.',
+            'icon.image' => 'Icon must be a valid image.',
+            'icon.max' => 'Maximal size of image must be at least 2MB.'
         ]);
 
         if ($validator->fails()) {
@@ -71,10 +98,10 @@ class CategoryController extends Controller
 
         if (!$category) {
             //return success with Api Resource
-            return new ResponseResource(false, 'CREATE CATEGORY FAILED', null);
+            return new ResponseResource(false, 'Failed to create category', null);
         }
 
-        return new ResponseResource(true, 'CREATE CATEGORY SUCCESS', $category);
+        return new ResponseResource(true, 'Create category successfully.', $category);
     }
 
     /**
@@ -95,18 +122,18 @@ class CategoryController extends Controller
         }
 
         //check image update
-        if ($request->file('image')) {
+        if ($request->file('icon')) {
 
             //remove old image
-            Storage::disk('local')->delete('public/categories/' . basename($category->image));
+            Storage::disk('local')->delete('public/categories/' . basename($category->icon));
 
-            //upload new image
-            $image = $request->file('image');
-            $image->storeAs('public/categories', $image->hashName());
+            //upload new icon
+            $icon = $request->file('icon');
+            $icon->storeAs('public/categories', $icon->hashName());
 
-            //update category with new image
+            //update category with new icon
             $category->update([
-                'image' => $image->hashName(),
+                'icon' => $icon->hashName(),
                 'name' => $request->name,
                 'slug' => Str::slug($request->name, '-'),
             ]);
@@ -120,11 +147,11 @@ class CategoryController extends Controller
 
         if ($category) {
             //return success with Api Resource
-            return new CategoryResource(true, 'Data Category Berhasil Diupdate!', $category);
+            return new ResponseResource(true, 'Successfully update category.', $category);
         }
 
         //return failed with Api Resource
-        return new CategoryResource(false, 'Data Category Gagal Diupdate!', null);
+        return new ResponseResource(false, 'Failed to update category.', null);
     }
 
     /**
@@ -136,14 +163,14 @@ class CategoryController extends Controller
     public function destroy(Category $category)
     {
         //remove image
-        Storage::disk('local')->delete('public/categories/' . basename($category->image));
+        Storage::disk('local')->delete('public/categories/' . basename($category->icon));
 
         if ($category->delete()) {
             //return success with Api Resource
-            return new CategoryResource(true, 'Data Category Berhasil Dihapus!', null);
+            return new ResponseResource(true, 'Data Category Berhasil Dihapus!', null);
         }
 
         //return failed with Api Resource
-        return new CategoryResource(false, 'Data Category Gagal Dihapus!', null);
+        return new ResponseResource(false, 'Data Category Gagal Dihapus!', null);
     }
 }
